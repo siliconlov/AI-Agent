@@ -1,23 +1,24 @@
 import { motion } from 'framer-motion';
-import { Loader2, CheckCircle2, Circle, Terminal } from 'lucide-react';
+import { Loader2, CheckCircle2, Circle, Terminal, Square } from 'lucide-react';
 import clsx from 'clsx';
 import { useEffect, useRef } from 'react';
 
 // Use same JobStatus interface as App.tsx (or export it centrally later)
 interface JobStatus {
     id: string;
-    status: 'queued' | 'planning' | 'researching' | 'reporting' | 'completed' | 'failed';
+    status: 'queued' | 'planning' | 'researching' | 'reporting' | 'completed' | 'failed' | 'stopping' | 'cancelled';
     logs: string[];
     report?: string;
 }
 
 interface StatusTerminalProps {
     status: JobStatus;
+    onStop: () => void;
 }
 
 const STEPS = ['planning', 'researching', 'reporting'];
 
-export function StatusTerminal({ status }: StatusTerminalProps) {
+export function StatusTerminal({ status, onStop }: StatusTerminalProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll logs
@@ -34,15 +35,31 @@ export function StatusTerminal({ status }: StatusTerminalProps) {
             className="glass rounded-xl p-6 border border-white/10"
         >
             {/* Header */}
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-3">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-cyan-500 blur-md opacity-20"></div>
-                    <Terminal className="text-cyan-400 w-6 h-6 relative z-10" />
-                </div>
-                <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">
-                    System Status
-                </span>
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold flex items-center gap-3">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-cyan-500 blur-md opacity-20"></div>
+                        <Terminal className="text-cyan-400 w-6 h-6 relative z-10" />
+                    </div>
+                    <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">
+                        System Status
+                    </span>
+                </h2>
+
+                {(status.status !== 'completed' && status.status !== 'failed' && status.status !== 'cancelled') && (
+                    <button
+                        onClick={onStop}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm border border-red-500/20 transition-all hover:border-red-500/50"
+                    >
+                        {status.status === 'stopping' ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                            <Square className="w-3 h-3 fill-current" />
+                        )}
+                        {status.status === 'stopping' ? 'Stopping...' : 'Stop'}
+                    </button>
+                )}
+            </div>
 
             {/* Progress Stepper */}
             <div className="mb-8 relative">

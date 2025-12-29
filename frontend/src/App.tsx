@@ -162,6 +162,16 @@ function App() {
     setIsLoading(false);
   };
 
+  const handleStop = async () => {
+    if (!jobId) return;
+    try {
+      await fetch(`${API_Base}/research/${jobId}/stop`, { method: 'POST' });
+      // Status update will be caught by polling
+    } catch (e) {
+      console.error("Stop failed", e);
+    }
+  };
+
   return (
     <Layout
       isOpen={true}
@@ -208,7 +218,7 @@ function App() {
             className="w-full max-w-4xl space-y-8"
           >
             {status.status !== 'completed' && (
-              <StatusTerminal status={status} />
+              <StatusTerminal status={status} onStop={handleStop} />
             )}
 
             {/* Completed Report */}

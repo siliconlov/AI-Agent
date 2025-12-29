@@ -39,7 +39,15 @@ class ResearchRequest(BaseModel):
     topic: str
     mode: str = "deep" # "deep" or "quick"
 
-# ... (JobStatus, etc)
+class ResearchResponse(BaseModel):
+    job_id: str
+
+class JobStatus(BaseModel):
+    id: str
+    status: str
+    logs: List[str]
+    report: Optional[str] = None
+    sources: List[str] = []
 
 def run_research_task(job_id: str, topic: str, mode: str = "deep"):
     logger.info(f"Starting job {job_id} for topic: {topic} (Mode: {mode})")
@@ -63,6 +71,12 @@ def run_research_task(job_id: str, topic: str, mode: str = "deep"):
             search_engine = SearchEngine()
             search_results = search_engine.search(topic)
             
+            # Check for cancellation
+            if get_job(job_id)['status'] == 'stopping':
+                logs.append("Research stopped by user.")
+                update_job_status(job_id, "cancelled", logs)
+                return
+
             # Format results for Reporter
             results = [{
                 "question": topic,
@@ -91,6 +105,12 @@ def run_research_task(job_id: str, topic: str, mode: str = "deep"):
             results = []
             
             for i, q in enumerate(questions):
+                # Check for cancellation
+                if get_job(job_id)['status'] == 'stopping':
+                    logs.append("Research stopped by user.")
+                    update_job_status(job_id, "cancelled", logs)
+                    return
+
                 logs.append(f"Researching: {q}")
                 update_job_status(job_id, "researching", logs)
                 
@@ -165,6 +185,15 @@ async def get_status(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
     return job
 
+@app.post("/api/research/{job_id}/stop")
+async def stop_research(job_id: str):
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    update_job_status(job_id, "stopping", job.get("logs", []))
+    return {"status": "stopping"}
+
 class ChatRequest(BaseModel):
     job_id: str
     message: str
@@ -222,4 +251,4 @@ async def update_job(job_id: str, req: UpdateJobRequest):
     return {"status": "updated"}
 
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("api:app", host="0.0.0.0", port=8000)
