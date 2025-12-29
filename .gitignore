@@ -1,0 +1,30 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Environment Variables
+.env
+.env.local
+
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+
+# Database
+*.db
+*.sqlite3
+research_agent.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build
+dist/
+build/

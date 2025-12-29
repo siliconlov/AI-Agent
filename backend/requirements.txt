@@ -1,0 +1,9 @@
+openai
+python-dotenv
+rich
+pydantic
+fastapi
+uvicorn
+python-multipart
+duckduckgo-search
+ollama
